@@ -1624,7 +1624,7 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      z-index: 5;
+      z-index: 2;
       overflow: hidden;
     }
 
@@ -1699,7 +1699,7 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      z-index: 6;
+      z-index: 2;
       overflow: hidden;
     }
 
@@ -3005,7 +3005,7 @@
       inset: 0;
       pointer-events: none;
       overflow: hidden;
-      z-index: 3;
+      z-index: 2;
     }
 
     .sky-lantern-composer {
@@ -6327,8 +6327,8 @@ Your Friend 💌`;
       const layer = document.getElementById("finaleBalloonLayer");
       if (!layer) return;
       if (!force && !grandFinaleRunning) return;
-      if (!force && layer.children.length >= 8) return;
-      while (layer.children.length >= 14 && layer.firstElementChild) {
+      if (!force && layer.children.length >= 5) return;
+      while (layer.children.length >= 9 && layer.firstElementChild) {
         layer.firstElementChild.remove();
       }
 
@@ -6365,7 +6365,7 @@ Your Friend 💌`;
       }, dur * 1000 + 200);
     }
 
-    function releaseFinaleBalloonWave(count = 5, force = true) {
+    function releaseFinaleBalloonWave(count = 3, force = true) {
       ensureFireworkLoopActive();
       for (let i = 0; i < count; i++) {
         setTimeout(() => {
@@ -6450,7 +6450,7 @@ Your Friend 💌`;
       if (!finaleBalloonTimer) {
         finaleBalloonTimer = setInterval(() => {
           if (!document.hidden && grandFinaleRunning) spawnFinaleBalloon(false, -20);
-        }, 2300);
+        }, 3800);
       }
       if (!finaleFlowerTimer) {
         finaleFlowerTimer = setInterval(() => {
