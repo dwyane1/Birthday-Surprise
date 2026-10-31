@@ -3005,7 +3005,10 @@
       inset: 0;
       pointer-events: none;
       overflow: hidden;
-      z-index: 2;
+      border-radius: inherit;
+      /* Layer lives inside the wish card: lanterns float IN FRONT of the card
+         content but are always clipped to / positioned within the card. */
+      z-index: 6;
     }
 
     .sky-lantern-composer {
@@ -3137,15 +3140,15 @@
       }
       12% {
         opacity: 1;
-        transform: translate3d(calc(var(--lantern-sway, 30px) * 0.3), -90px, 0) scale(1) rotate(3deg);
+        transform: translate3d(calc(var(--lantern-sway, 30px) * 0.3), calc(var(--lantern-rise, 420px) * -0.1), 0) scale(1) rotate(3deg);
       }
       55% {
         opacity: 1;
-        transform: translate3d(calc(var(--lantern-sway, 30px) * -0.6), -420px, 0) scale(0.96) rotate(-4deg);
+        transform: translate3d(calc(var(--lantern-sway, 30px) * -0.6), calc(var(--lantern-rise, 420px) * -0.5), 0) scale(0.96) rotate(-4deg);
       }
       100% {
         opacity: 0;
-        transform: translate3d(var(--lantern-sway, 30px), -860px, 0) scale(0.78) rotate(4deg);
+        transform: translate3d(var(--lantern-sway, 30px), calc(var(--lantern-rise, 420px) * -1), 0) scale(0.78) rotate(4deg);
       }
     }
 
@@ -4405,11 +4408,11 @@
       <!-- Drifting Flowers & Botanical Petals Layer -->
       <div class="finale-petal-layer" id="finalePetalLayer" aria-hidden="true"></div>
 
-      <!-- Rising Glowing Sky Lantern Wishes Layer -->
-      <div class="finale-sky-lanterns" id="finaleSkyLanternLayer" aria-live="polite"></div>
-
       <!-- Grand Finale Centerpiece Card -->
       <div class="finale-centerpiece" id="finaleCenterpiece">
+        <!-- Rising Glowing Sky Lantern Wishes Layer (kept inside the card so lanterns never leave it) -->
+        <div class="finale-sky-lanterns" id="finaleSkyLanternLayer" aria-live="polite"></div>
+
         <div class="finale-crown-emblem">
           <span>🎆</span>
           <span>Grand Finale · All Chapters Complete · 21st Milestone</span>
@@ -5802,6 +5805,7 @@ Your Friend 💌`;
       const inputEl = document.getElementById("skyLanternInput");
       const releaseBtn = document.getElementById("releaseLanternBtn");
       const quickChips = document.querySelectorAll(".lantern-chip");
+      const composerEl = document.getElementById("skyLanternComposer");
       if (!lanternLayer || !inputEl || !releaseBtn) return;
 
       const defaultWishes = [
@@ -5822,14 +5826,9 @@ Your Friend 💌`;
 
         const lantern = document.createElement("div");
         lantern.className = "floating-sky-lantern";
-        const leftPct = 10 + Math.random() * 76;
         const dur = 12 + Math.random() * 3.5;
-        const sway = Math.round((Math.random() - 0.5) * 90);
-
-        lantern.style.left = `${leftPct}%`;
-        lantern.style.bottom = "12px";
+        lantern.style.left = "0px";
         lantern.style.setProperty("--lantern-dur", `${dur}s`);
-        lantern.style.setProperty("--lantern-sway", `${sway}px`);
 
         const body = document.createElement("div");
         body.className = "lantern-body";
@@ -5850,6 +5849,42 @@ Your Friend 💌`;
         });
 
         lanternLayer.appendChild(lantern);
+
+        // Keep the lantern strictly inside the wish card on every screen size:
+        // measure the card + lantern, then derive left/bottom/sway/rise from them.
+        const edge = 10;
+        const layerW = lanternLayer.clientWidth;
+        const layerH = lanternLayer.clientHeight;
+        const lw = lantern.offsetWidth;
+        const lh = lantern.offsetHeight;
+
+        const maxSway = Math.max(0, Math.min(40, (layerW - lw) / 2 - edge));
+        const sway = Math.round((Math.random() * 2 - 1) * maxSway);
+        const minLeft = edge + Math.abs(sway);
+        const maxLeft = layerW - lw - edge - Math.abs(sway);
+        const left = maxLeft > minLeft
+          ? minLeft + Math.random() * (maxLeft - minLeft)
+          : Math.max(0, (layerW - lw) / 2);
+
+        // Launch from the bottom of the wish composer (right where the user is looking)
+        // and float up to the top of the card. Fall back to the card bottom if needed.
+        let anchorY = layerH - 24;
+        if (composerEl) {
+          const layerRect = lanternLayer.getBoundingClientRect();
+          const compRect = composerEl.getBoundingClientRect();
+          const scaleY = layerRect.height ? layerH / layerRect.height : 1;
+          const composerBottom = (compRect.bottom - layerRect.top) * scaleY;
+          if (composerBottom - lh - edge >= 160) {
+            anchorY = Math.min(composerBottom, layerH - 24);
+          }
+        }
+        const rise = Math.max(0, anchorY - lh - edge);
+
+        lantern.style.left = `${Math.round(left)}px`;
+        lantern.style.bottom = `${Math.round(layerH - anchorY)}px`;
+        lantern.style.setProperty("--lantern-sway", `${sway}px`);
+        lantern.style.setProperty("--lantern-rise", `${Math.round(rise)}px`);
+
         playSparkleChime([523.25, 659.25, 783.99, 1046.5]);
 
         setTimeout(() => {
